@@ -16,7 +16,7 @@ _In this repository you will see Rust and a little of GoLang_
 
 ## :crab: Why Rust? :crab:
 
-Why not? Run is readable, maintainable, and crash-free. Rust is awesome.
+Why not ? is readable, maintainable, and crash-free. Rust is awesome.
 
 ## :telescope: Online Judges 
 

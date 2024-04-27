@@ -20,12 +20,13 @@ Why not ? is readable, fast, and crash-free. Rust is awesome.
 
 ## :triangular_flag_on_post: Online Judges :triangular_flag_on_post:
 
+
+
+- #### [BeeCrowd](https://www.beecrowd.com/)
+- #### [UVA](https://onlinejudge.org/)
+- #### [LeetCode](https://leetcode.com/)
 - #### [CodeChef](https://www.codechef.com/)
 - #### [CodeForces](https://codeforces.com/)
-- #### [BeeCrowd](https://www.beecrowd.com/)
-- #### [LeetCode](https://leetcode.com/)
-- #### [SPOJ](https://www.spoj.com/)
-- #### [UVA](https://onlinejudge.org/)
 
 
 ## :sos:

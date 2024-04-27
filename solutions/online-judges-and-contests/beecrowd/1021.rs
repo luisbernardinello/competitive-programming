@@ -4,8 +4,8 @@ fn main() {
     let mut value = String::new();
     io::stdin()
         .read_line(&mut value)
-        .expect("Failed to read input");
-    let value: f64 = value.trim().parse().expect("Invalid input");
+        .expect("falha na leitura do input");
+    let value: f64 = value.trim().parse().expect("input invalido");
 
     let mut hundred = 0;
     let mut fifty = 0;
@@ -20,7 +20,7 @@ fn main() {
     let mut fivecents = 0;
     let mut cents = 0;
 
-    let mut value = value * 100.0; // Convertendo para centavos
+    let mut value = value * 100.0; // converte para centavos
 
     if (value / 100.0) >= 1.0 {
         hundred = (value / 100.0) as i32;

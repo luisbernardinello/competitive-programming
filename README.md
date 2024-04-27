@@ -68,7 +68,7 @@ Why not ? is readable, fast, and crash-free. Rust is awesome.
 <ul>
   <li>Multiplication ( Strassen's algorithm ), Logarithmic exponentiation</li>
   <li>Matrix Transformations [ Transpose, Rotation Of Matrix, Representing Linear Transformations Using Matrix ]</li>
-  <li>Determinant, Rank and Inverse Of Matrix [ Gaussian Elimination, Gauss Jordan Elimination]</li>
+  <li>Determinant, Rank and Inverse Of Matrix [Gaussian Elimination, Gauss Jordan Elimination]</li>
   <li>Solving System Of Linear Equations</li>
   <li>Matrix Exponentiation To Solve Recurrences</li>
   <li>Basic Probability and Conditional Probability</li>

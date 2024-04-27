@@ -28,13 +28,13 @@ Why not ? is readable, fast, and crash-free. Rust is awesome.
 - #### [UVA](https://onlinejudge.org/)
 
 
-## What you will need.. :sos:
+## :sos:
 
 <details>
 
+<summary>What you will need</summary>
 <div align="left">
 
-<h2>Data Structures and Algorithms</h2>
 
 <h3>Searching Algorithms</h3>
 <ul>
@@ -63,9 +63,6 @@ Why not ? is readable, fast, and crash-free. Rust is awesome.
 
 <hr>
 
-<h2>Linear Algebra (and of course, mathematics)</h2>
-
-
 <h3>Linear Algebra and Math</h3>
 <ul>
   <li>Multiplication ( Strassen's algorithm ), Logarithmic exponentiation</li>
@@ -83,9 +80,9 @@ Why not ? is readable, fast, and crash-free. Rust is awesome.
 
 <hr>
 
-<h2>Graphs (All of it)</h2>
+<h3>Graphs (All of it)</h3>
 
-
+<br>
 
 </div>
 

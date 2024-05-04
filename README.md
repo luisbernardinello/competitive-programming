@@ -1,7 +1,7 @@
 ![Unesp](https://img.shields.io/badge/BCC-UNESP-Bauru.svg)
 ![License](https://img.shields.io/badge/Code%20License-MIT-blue.svg)
 # Competitive Programming
-![competitive-programming](https://socialify.git.ci/luisbernardinello/competitive-programming/image?description=1&font=Raleway&language=1&name=1&owner=1&pattern=Diagonal%20Stripes&theme=Light)
+![competitive-programming](https://socialify.git.ci/luisbernardinello/competitive-programming/image?description=1&font=KoHo&language=1&name=1&owner=1&pattern=Brick%20Wall&theme=Auto)
 ## What is this ?
 
 
@@ -10,7 +10,7 @@
 <br>
 
 
-_In this repository you will see Rust and a little of GoLang_
+_In this repository you will see Rust and GoLang_
 
 
 
@@ -21,11 +21,10 @@ Why not ? is readable, fast, and crash-free. Rust is awesome.
 ## :triangular_flag_on_post: Online Judges :triangular_flag_on_post:
 
 
-
+- #### [CodeWars](https://codewars.com/)
 - #### [BeeCrowd](https://www.beecrowd.com/)
 - #### [UVA](https://onlinejudge.org/)
 - #### [LeetCode](https://leetcode.com/)
-- #### [CodeChef](https://www.codechef.com/)
 - #### [CodeForces](https://codeforces.com/)
 
 
@@ -66,7 +65,7 @@ Why not ? is readable, fast, and crash-free. Rust is awesome.
 
 <h3>Linear Algebra and Math</h3>
 <ul>
-  <li>Multiplication ( Strassen's algorithm ), Logarithmic exponentiation</li>
+  <li>Strassen's algorithm, Logarithmic exponentiation</li>
   <li>Matrix Transformations [ Transpose, Rotation Of Matrix, Representing Linear Transformations Using Matrix ]</li>
   <li>Determinant, Rank and Inverse Of Matrix [Gaussian Elimination, Gauss Jordan Elimination]</li>
   <li>Solving System Of Linear Equations</li>

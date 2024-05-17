@@ -1,12 +1,16 @@
 package kata
 
+import (
+	"sync"
+)
+
 const N = 6
 
 type Line []int
 
 type Clue struct {
-	First int
-	Last  int
+	F int
+	L int
 }
 
 type Solver struct {
@@ -19,7 +23,6 @@ type Solver struct {
 
 func NewSolver(clues []int) *Solver {
 	colClues, rowClues := prepareClues(clues)
-
 	return &Solver{
 		permutations: generateAllLinePermutations(possibleFloors(N)),
 		colClues:     colClues,
@@ -32,49 +35,61 @@ func SolvePuzzle(clues []int) [][]int {
 }
 
 func (s *Solver) Solve() [][]int {
-	s.possibleRows = possibleLines(s.rowClues, s.permutations)
-	s.possibleCols = possibleLines(s.colClues, s.permutations)
-
-	return s.buildSolution()
+	var wg sync.WaitGroup
+	s.possibleRows = s.filterPossibleLines(s.rowClues, s.permutations, &wg)
+	s.possibleCols = s.filterPossibleLines(s.colClues, s.permutations, &wg)
+	wg.Wait()
+	return s.buildMap()
 }
 
-func (s *Solver) buildSolution() [][]int {
-	for !s.isOneLinePerClue() {
-		for i, rows := range s.possibleRows {
-			s.possibleRows[i] = filterMatchingOpposites(rows, s.possibleCols, i)
+func (s *Solver) buildMap() [][]int {
+	for !s.hasUniqueSolution() {
+		var wg sync.WaitGroup
+		wg.Add(len(s.possibleRows) + len(s.possibleCols))
+
+		for i := range s.possibleRows {
+			go func(i int) {
+				defer wg.Done()
+				s.possibleRows[i] = filterMatchingLines(s.possibleRows[i], s.possibleCols, i)
+			}(i)
 		}
 
-		for i, cols := range s.possibleCols {
-			s.possibleCols[i] = filterMatchingOpposites(cols, s.possibleRows, i)
+		for i := range s.possibleCols {
+			go func(i int) {
+				defer wg.Done()
+				s.possibleCols[i] = filterMatchingLines(s.possibleCols[i], s.possibleRows, i)
+			}(i)
 		}
+
+		wg.Wait()
 	}
 
 	result := make([][]int, N)
 	for i, rows := range s.possibleRows {
 		result[i] = rows[0]
 	}
-
 	return result
 }
 
-func filterMatchingOpposites(lines []Line, oppositeLines [][]Line, position int) []Line {
-	var result []Line
+func filterMatchingLines(lines []Line, oppositeLines [][]Line, position int) (res []Line) {
 	for _, line := range lines {
-		isValidLine := true
-		for i, elem := range line {
-			if !isElementInPosition(elem, position, oppositeLines[i]) {
-				isValidLine = false
-				break
-			}
-		}
-		if isValidLine {
-			result = append(result, line)
+		if isLineMatching(line, position, oppositeLines) {
+			res = append(res, line)
 		}
 	}
-	return result
+	return res
 }
 
-func isElementInPosition(elem, position int, lines []Line) bool {
+func isLineMatching(line Line, position int, oppositeLines [][]Line) bool {
+	for i, elem := range line {
+		if !containsElementAtPosition(elem, position, oppositeLines[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func containsElementAtPosition(elem, position int, lines []Line) bool {
 	for _, line := range lines {
 		if line[position] == elem {
 			return true
@@ -83,63 +98,64 @@ func isElementInPosition(elem, position int, lines []Line) bool {
 	return false
 }
 
-func (s *Solver) isOneLinePerClue() bool {
+func (s *Solver) hasUniqueSolution() bool {
 	for _, cols := range s.possibleCols {
 		if len(cols) > 1 {
 			return false
 		}
 	}
-
 	for _, rows := range s.possibleRows {
 		if len(rows) > 1 {
 			return false
 		}
 	}
-
 	return true
 }
 
-func possibleLines(clues []Clue, lines []Line) [][]Line {
-	result := make([][]Line, len(clues))
+func (s *Solver) filterPossibleLines(clues []Clue, lines []Line, wg *sync.WaitGroup) [][]Line {
+	res := make([][]Line, len(clues))
 	for i, clue := range clues {
-		var cluePossibleLines []Line
-		for _, line := range lines {
-			if line.matchesClue(clue) {
-				cluePossibleLines = append(cluePossibleLines, line)
+		wg.Add(1)
+		go func(i int, clue Clue) {
+			defer wg.Done()
+			var cluePossibleLines []Line
+			for _, line := range lines {
+				if line.matchesClue(clue) {
+					cluePossibleLines = append(cluePossibleLines, line)
+				}
 			}
-		}
-		result[i] = cluePossibleLines
+			res[i] = cluePossibleLines
+		}(i, clue)
 	}
-	return result
+	return res
 }
 
-func prepareClues(clues []int) ([]Clue, []Clue) {
-	var colClues, rowClues []Clue
+func prepareClues(clues []int) (colClues, rowClues []Clue) {
 	for i := 0; i < len(clues)/2; i++ {
-		clue := Clue{
-			First: clues[i],
-			Last:  clues[N*(3+i/N)-(i%N+1)],
+		c := Clue{
+			F: clues[i],
+			L: clues[N*(3+i/N)-(i%N+1)],
 		}
-
 		if i < N {
-			colClues = append(colClues, clue)
+			colClues = append(colClues, c)
 		} else {
-			clue.First, clue.Last = clue.Last, clue.First
-			rowClues = append(rowClues, clue)
+			c.F, c.L = c.L, c.F
+			rowClues = append(rowClues, c)
 		}
 	}
 	return colClues, rowClues
 }
 
-func generateAllLinePermutations(src []int) []Line {
-	var result []Line
-	for p := make([]int, len(src)); p[0] < len(p); nextPermutation(p) {
-		result = append(result, permute(src, p))
+func generateAllLinePermutations(src []int) (res []Line) {
+	p := make([]int, len(src))
+	for p[0] < len(p) {
+		res = append(res, permute(src, p))
+		nextPerm(p)
 	}
-	return result
+	return res
 }
 
-func nextPermutation(p []int) {
+func nextPerm(p []int) {
 	for i := len(p) - 1; i >= 0; i-- {
 		if i == 0 || p[i] < len(p)-i-1 {
 			p[i]++
@@ -149,25 +165,25 @@ func nextPermutation(p []int) {
 	}
 }
 
-func permute(src, p []int) []int {
-	result := make([]int, len(src))
-	copy(result, src)
+func permute(src, p []int) Line {
+	res := make(Line, len(src))
+	copy(res, src)
 	for i, v := range p {
-		result[i], result[i+v] = result[i+v], result[i]
+		res[i], res[i+v] = res[i+v], res[i]
 	}
-	return result
+	return res
 }
 
 func possibleFloors(size int) []int {
-	result := make([]int, size)
+	res := make([]int, size)
 	for i := 0; i < size; i++ {
-		result[i] = i + 1
+		res[i] = i + 1
 	}
-	return result
+	return res
 }
 
-func (l Line) countVisible() int {
-	var max, count int
+func (l Line) countVisible() (count int) {
+	max := 0
 	for _, val := range l {
 		if val > max {
 			count++
@@ -179,14 +195,14 @@ func (l Line) countVisible() int {
 
 func (l Line) reverse() Line {
 	size := len(l)
-	result := make([]int, size)
-	for i := len(l) - 1; i >= 0; i-- {
-		result[i] = l[size-1-i]
+	res := make(Line, size)
+	for i, v := range l {
+		res[size-1-i] = v
 	}
-	return result
+	return res
 }
 
 func (l Line) matchesClue(clue Clue) bool {
-	return (clue.First == 0 || l.countVisible() == clue.First) &&
-		(clue.Last == 0 || l.reverse().countVisible() == clue.Last)
+	return (clue.F == 0 || l.countVisible() == clue.F) &&
+		(clue.L == 0 || l.reverse().countVisible() == clue.L)
 }

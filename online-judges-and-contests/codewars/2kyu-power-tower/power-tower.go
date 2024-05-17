@@ -2,80 +2,88 @@ package kata
 
 import (
 	"math/big"
+	"sync"
 )
 
-var W []*big.Int
+var (
+	phiCache = make(map[uint64]uint64)
+	mu       sync.RWMutex
+)
 
 func Tower(base, height uint64, modulus uint32) uint32 {
-	if modulus == 1 {
+	switch {
+	case modulus == 1:
 		return 0
-	}
-	if base == 1 || height == 0 {
+	case base == 1 || height == 0:
 		return 1
-	}
-	if height == 1 {
+	case height == 1:
 		return uint32(base % uint64(modulus))
 	}
 
-	W = make([]*big.Int, height)
 	baseBig := big.NewInt(int64(base))
-	for i := range W {
-		W[i] = baseBig
-	}
-
-	return uint32(calculateGrowth(0, height-1, uint64(modulus)) % uint64(modulus))
+	return uint32(calculateGrowth(baseBig, height, uint64(modulus)).Uint64() % uint64(modulus))
 }
 
-func CalculateOperation(input, divisor uint64) uint64 {
-	if input < divisor*4 {
+func calculateGrowth(base *big.Int, height uint64, modulus uint64) *big.Int {
+	if height == 1 || modulus == 1 {
+		return calculateOperation(base, big.NewInt(int64(modulus)))
+	}
+
+	nextModulus := totientEuler(modulus)
+	nextGrowth := calculateGrowth(base, height-1, nextModulus)
+	return towerModPow(base, nextGrowth, big.NewInt(int64(modulus)))
+}
+
+func calculateOperation(input, divisor *big.Int) *big.Int {
+	fourTimesDivisor := new(big.Int).Mul(divisor, big.NewInt(4))
+	if input.Cmp(fourTimesDivisor) < 0 {
 		return input
 	}
-	return (input % divisor) + (divisor * 3)
+	remainder := new(big.Int).Mod(input, divisor)
+	threeTimesDivisor := new(big.Int).Mul(divisor, big.NewInt(3))
+	return new(big.Int).Add(remainder, threeTimesDivisor)
 }
 
-func towerModPow(input, divisor, modulus uint64) uint64 {
-	resultModPow := uint64(1)
-	for divisor != 0 {
-		if divisor&1 != 0 {
-			resultModPow = CalculateOperation(resultModPow*input, modulus)
+func towerModPow(base, exp, mod *big.Int) *big.Int {
+	result := big.NewInt(1)
+	zero := big.NewInt(0)
+	one := big.NewInt(1)
+
+	for exp.Cmp(zero) != 0 {
+		if new(big.Int).And(exp, one).Cmp(one) == 0 {
+			result = calculateOperation(new(big.Int).Mul(result, base), mod)
 		}
-		input = CalculateOperation(input*input, modulus)
-		divisor >>= 1
+		base = calculateOperation(new(big.Int).Mul(base, base), mod)
+		exp = new(big.Int).Rsh(exp, 1)
 	}
-	return resultModPow
+	return result
 }
 
-func calculateGrowth(leftIndex, rightIndex, modulus uint64) uint64 {
-	// if only one element left to process or modulus is 1
-	if leftIndex == rightIndex || modulus == 1 {
-		return CalculateOperation(W[leftIndex].Uint64(), modulus)
+func totientEuler(n uint64) uint64 {
+	mu.RLock()
+	if result, exists := phiCache[n]; exists {
+		mu.RUnlock()
+		return result
 	}
+	mu.RUnlock()
 
-	// calc growth recursively
-	nextModulus := totientEuler(modulus)
-	nextGrowth := calculateGrowth(leftIndex+1, rightIndex, nextModulus)
-	return towerModPow(W[leftIndex].Uint64(), nextGrowth, modulus)
-}
-
-func totientEuler(N uint64) uint64 {
-	last := make(map[uint64]uint64)
-	if value, ok := last[N]; ok {
-		return value
-	}
-
-	resultTotient := N
-	for i := uint64(2); i*i <= N; i++ {
-		if N%i == 0 {
-			for N%i == 0 {
-				N /= i
+	originalN := n
+	result := n
+	for i := uint64(2); i*i <= n; i++ {
+		if n%i == 0 {
+			for n%i == 0 {
+				n /= i
 			}
-			resultTotient -= resultTotient / i
+			result -= result / i
 		}
 	}
-	if N > 1 {
-		resultTotient -= resultTotient / N
+	if n > 1 {
+		result -= result / n
 	}
 
-	last[N] = resultTotient
-	return resultTotient
+	mu.Lock()
+	phiCache[originalN] = result
+	mu.Unlock()
+
+	return result
 }

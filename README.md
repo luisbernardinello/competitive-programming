@@ -1,15 +1,13 @@
 ![Unesp](https://img.shields.io/badge/BCC-UNESP-Bauru.svg)
 ![License](https://img.shields.io/badge/Code%20License-MIT-blue.svg)
 # Competitive Programming
-![competitive-programming](https://socialify.git.ci/luisbernardinello/competitive-programming/image?description=1&font=KoHo&language=1&name=1&owner=1&pattern=Brick%20Wall&theme=Auto)
+![competitive-programming](https://socialify.git.ci/luisbernardinello/competitive-programming/image?font=Bitter&language=1&name=1&owner=1&pattern=Formal%20Invitation&theme=Dark)
 ## What is this ?
-
 
 "it’s a mind sport. It more fully develops your algorithmic reasoning skills and bridges the gap between theory and application in bite-sized chunks. Full participation develops problem solving intuition and competence" - Steven Halim in his book **Competitive Programming 4.**
 
-<br>
 
-## :crab: :beaver:
+## :beaver: :crab:
 _In this repository you will see mainly Golang and Rust in my solutions_
 
 
@@ -24,12 +22,13 @@ _In this repository you will see mainly Golang and Rust in my solutions_
 - #### [CodeForces](https://codeforces.com/)
 
 
-## :sos:
 
+### :sos:
 <details>
 
-<summary>What you will need</summary>
+<summary></summary>
 <div align="left">
+<h2>The helper guide (you must have)</h2>
 
 
 <h3>Searching Algorithms</h3>

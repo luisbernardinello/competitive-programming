@@ -9,14 +9,10 @@
 
 <br>
 
+## :crab: :beaver:
+_In this repository you will see mainly Golang and Rust in my solutions_
 
-_In this repository you will see Rust and GoLang_
 
-
-
-## :crab: Why Rust? :crab:
-
-Why not ? is readable, fast, and crash-free. Rust is awesome.
 
 ## :triangular_flag_on_post: Online Judges :triangular_flag_on_post:
 

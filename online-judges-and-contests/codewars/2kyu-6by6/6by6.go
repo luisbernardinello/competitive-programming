@@ -4,107 +4,107 @@ import (
 	"sync"
 )
 
-const N = 6
-
-type Line []int
-
-type Clue struct {
-	F int
-	L int
+type ViewClue struct {
+	Front int
+	Back  int
 }
 
-type Solver struct {
-	possibleCols [][]Line
-	possibleRows [][]Line
-	colClues     []Clue
-	rowClues     []Clue
-	permutations []Line
+type BuildingRow []int
+
+const gridSize = 6
+
+type PuzzleSolver struct {
+	candidateCols [][]BuildingRow
+	candidateRows [][]BuildingRow
+	columnClues   []ViewClue
+	rowClues      []ViewClue
+	allPerms      []BuildingRow
+	permsMap      map[string]bool
 }
 
-func NewSolver(clues []int) *Solver {
-	colClues, rowClues := prepareClues(clues)
-	return &Solver{
-		permutations: generateAllLinePermutations(possibleFloors(N)),
-		colClues:     colClues,
-		rowClues:     rowClues,
+func nSolvePuzzle(clues []int) *PuzzleSolver {
+	columnClues, rowClues := transformClues(clues)
+	perms := generatePermutations(generateFloorOptions(gridSize))
+
+	return &PuzzleSolver{
+		allPerms:    perms,
+		columnClues: columnClues,
+		rowClues:    rowClues,
+		permsMap:    createPermsMap(perms),
 	}
 }
 
-func SolvePuzzle(clues []int) [][]int {
-	return NewSolver(clues).Solve()
-}
-
-func (s *Solver) Solve() [][]int {
+func (ps *PuzzleSolver) Solve() [][]int {
 	var wg sync.WaitGroup
-	s.possibleRows = s.filterPossibleLines(s.rowClues, s.permutations, &wg)
-	s.possibleCols = s.filterPossibleLines(s.colClues, s.permutations, &wg)
+	ps.candidateRows = ps.filterRows(ps.rowClues, ps.allPerms, &wg)
+	ps.candidateCols = ps.filterRows(ps.columnClues, ps.allPerms, &wg)
 	wg.Wait()
-	return s.buildMap()
+	return ps.assembleGrid()
 }
 
-func (s *Solver) buildMap() [][]int {
-	for !s.hasUniqueSolution() {
+func (ps *PuzzleSolver) assembleGrid() [][]int {
+	for !ps.isUniqueSolution() {
 		var wg sync.WaitGroup
-		wg.Add(len(s.possibleRows) + len(s.possibleCols))
+		wg.Add(len(ps.candidateRows) + len(ps.candidateCols))
 
-		for i := range s.possibleRows {
+		for i := range ps.candidateRows {
 			go func(i int) {
 				defer wg.Done()
-				s.possibleRows[i] = filterMatchingLines(s.possibleRows[i], s.possibleCols, i)
+				ps.candidateRows[i] = filterValidRows(ps.candidateRows[i], ps.candidateCols, i)
 			}(i)
 		}
 
-		for i := range s.possibleCols {
+		for i := range ps.candidateCols {
 			go func(i int) {
 				defer wg.Done()
-				s.possibleCols[i] = filterMatchingLines(s.possibleCols[i], s.possibleRows, i)
+				ps.candidateCols[i] = filterValidRows(ps.candidateCols[i], ps.candidateRows, i)
 			}(i)
 		}
 
 		wg.Wait()
 	}
 
-	result := make([][]int, N)
-	for i, rows := range s.possibleRows {
+	result := make([][]int, gridSize)
+	for i, rows := range ps.candidateRows {
 		result[i] = rows[0]
 	}
 	return result
 }
 
-func filterMatchingLines(lines []Line, oppositeLines [][]Line, position int) (res []Line) {
-	for _, line := range lines {
-		if isLineMatching(line, position, oppositeLines) {
-			res = append(res, line)
+func filterValidRows(rows []BuildingRow, opposingRows [][]BuildingRow, position int) (result []BuildingRow) {
+	for _, row := range rows {
+		if isRowValid(row, position, opposingRows) {
+			result = append(result, row)
 		}
 	}
-	return res
+	return result
 }
 
-func isLineMatching(line Line, position int, oppositeLines [][]Line) bool {
-	for i, elem := range line {
-		if !containsElementAtPosition(elem, position, oppositeLines[i]) {
+func isRowValid(row BuildingRow, position int, opposingRows [][]BuildingRow) bool {
+	for i, value := range row {
+		if !containsValueAtPosition(value, position, opposingRows[i]) {
 			return false
 		}
 	}
 	return true
 }
 
-func containsElementAtPosition(elem, position int, lines []Line) bool {
-	for _, line := range lines {
-		if line[position] == elem {
+func containsValueAtPosition(value, position int, rows []BuildingRow) bool {
+	for _, row := range rows {
+		if row[position] == value {
 			return true
 		}
 	}
 	return false
 }
 
-func (s *Solver) hasUniqueSolution() bool {
-	for _, cols := range s.possibleCols {
+func (ps *PuzzleSolver) isUniqueSolution() bool {
+	for _, cols := range ps.candidateCols {
 		if len(cols) > 1 {
 			return false
 		}
 	}
-	for _, rows := range s.possibleRows {
+	for _, rows := range ps.candidateRows {
 		if len(rows) > 1 {
 			return false
 		}
@@ -112,50 +112,66 @@ func (s *Solver) hasUniqueSolution() bool {
 	return true
 }
 
-func (s *Solver) filterPossibleLines(clues []Clue, lines []Line, wg *sync.WaitGroup) [][]Line {
-	res := make([][]Line, len(clues))
+func (ps *PuzzleSolver) filterRows(clues []ViewClue, rows []BuildingRow, wg *sync.WaitGroup) [][]BuildingRow {
+	result := make([][]BuildingRow, len(clues))
 	for i, clue := range clues {
 		wg.Add(1)
-		go func(i int, clue Clue) {
+		go func(i int, clue ViewClue) {
 			defer wg.Done()
-			var cluePossibleLines []Line
-			for _, line := range lines {
-				if line.matchesClue(clue) {
-					cluePossibleLines = append(cluePossibleLines, line)
+			var validRows []BuildingRow
+			for _, row := range rows {
+				if row.matchesClue(clue) {
+					validRows = append(validRows, row)
 				}
 			}
-			res[i] = cluePossibleLines
+			result[i] = validRows
 		}(i, clue)
 	}
-	return res
+	return result
 }
 
-func prepareClues(clues []int) (colClues, rowClues []Clue) {
+func transformClues(clues []int) (columnClues, rowClues []ViewClue) {
 	for i := 0; i < len(clues)/2; i++ {
-		c := Clue{
-			F: clues[i],
-			L: clues[N*(3+i/N)-(i%N+1)],
+		c := ViewClue{
+			Front: clues[i],
+			Back:  clues[gridSize*(3+i/gridSize)-(i%gridSize+1)],
 		}
-		if i < N {
-			colClues = append(colClues, c)
+		if i < gridSize {
+			columnClues = append(columnClues, c)
 		} else {
-			c.F, c.L = c.L, c.F
+			c.Front, c.Back = c.Back, c.Front
 			rowClues = append(rowClues, c)
 		}
 	}
-	return colClues, rowClues
+	return columnClues, rowClues
 }
 
-func generateAllLinePermutations(src []int) (res []Line) {
-	p := make([]int, len(src))
+func generatePermutations(source []int) (result []BuildingRow) {
+	p := make([]int, len(source))
 	for p[0] < len(p) {
-		res = append(res, permute(src, p))
-		nextPerm(p)
+		result = append(result, createPermutation(source, p))
+		advancePermutation(p)
 	}
-	return res
+	return result
 }
 
-func nextPerm(p []int) {
+func createPermsMap(perms []BuildingRow) map[string]bool {
+	permsMap := make(map[string]bool)
+	for _, perm := range perms {
+		permsMap[rowKey(perm)] = true
+	}
+	return permsMap
+}
+
+func rowKey(row BuildingRow) string {
+	key := ""
+	for _, val := range row {
+		key += string(rune(val + '0'))
+	}
+	return key
+}
+
+func advancePermutation(p []int) {
 	for i := len(p) - 1; i >= 0; i-- {
 		if i == 0 || p[i] < len(p)-i-1 {
 			p[i]++
@@ -165,26 +181,18 @@ func nextPerm(p []int) {
 	}
 }
 
-func permute(src, p []int) Line {
-	res := make(Line, len(src))
-	copy(res, src)
+func createPermutation(source, p []int) BuildingRow {
+	result := make(BuildingRow, len(source))
+	copy(result, source)
 	for i, v := range p {
-		res[i], res[i+v] = res[i+v], res[i]
+		result[i], result[i+v] = result[i+v], result[i]
 	}
-	return res
+	return result
 }
 
-func possibleFloors(size int) []int {
-	res := make([]int, size)
-	for i := 0; i < size; i++ {
-		res[i] = i + 1
-	}
-	return res
-}
-
-func (l Line) countVisible() (count int) {
+func (br BuildingRow) countVisibleBuildings() (count int) {
 	max := 0
-	for _, val := range l {
+	for _, val := range br {
 		if val > max {
 			count++
 			max = val
@@ -193,16 +201,31 @@ func (l Line) countVisible() (count int) {
 	return count
 }
 
-func (l Line) reverse() Line {
-	size := len(l)
-	res := make(Line, size)
-	for i, v := range l {
-		res[size-1-i] = v
+func generateFloorOptions(size int) []int {
+	result := make([]int, size)
+	for i := 0; i < size; i++ {
+		result[i] = i + 1
 	}
-	return res
+	return result
 }
 
-func (l Line) matchesClue(clue Clue) bool {
-	return (clue.F == 0 || l.countVisible() == clue.F) &&
-		(clue.L == 0 || l.reverse().countVisible() == clue.L)
+func (br BuildingRow) matchesClue(clue ViewClue) bool {
+	return (clue.Front == 0 || br.countVisibleBuildings() == clue.Front) &&
+		(clue.Back == 0 || br.reverseRow().countVisibleBuildings() == clue.Back)
+}
+
+func (br BuildingRow) reverseRow() BuildingRow {
+	size := len(br)
+	result := make(BuildingRow, size)
+	for i, v := range br {
+		result[size-1-i] = v
+	}
+	return result
+}
+
+///////////////////////////////////////////
+//////////////////////////
+
+func SolvePuzzle(clues []int) [][]int {
+	return nSolvePuzzle(clues).Solve()
 }

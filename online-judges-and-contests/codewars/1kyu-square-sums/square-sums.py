@@ -1,9 +1,11 @@
+## this kata fails in big test cases...
+
 from math import isqrt
 from collections import defaultdict, deque
 
 def create_graph(n):
     graph = {i: [] for i in range(1, n + 1)}
-    perfect_squares = set(isqrt(i) ** 2 for i in range(2 * n + 1))  # Precompute perfect squares up to 2*n
+    perfect_squares = set(isqrt(i) ** 2 for i in range(2 * n + 1)) 
 
     for i in range(1, n + 1):
         for j in range(i + 1, n + 1):
@@ -11,7 +13,7 @@ def create_graph(n):
                 graph[i].append(j)
                 graph[j].append(i)
 
-    # Sort the adjacency lists based on the length (connectivity) of the nodes
+    # sort the adjacency lists based on the connectivity ( the length) of the nodes
     for key in graph:
         graph[key].sort(key=lambda x: len(graph[x]), reverse=True)
     
@@ -34,7 +36,7 @@ def hamiltonian_path(graph, n, path, visited, best_path):
 
 def square_sums(n):
     graph = create_graph(n)
-    # Start with the node that has the highest connectivity
+    # start with the node that has the highest connectivity
     start_nodes = sorted(graph.keys(), key=lambda x: len(graph[x]), reverse=True)
     best_path = None
 

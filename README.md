@@ -17,7 +17,6 @@ _In this repository you will see mainly Golang and Rust in my solutions_
 
 - #### [CodeWars](https://codewars.com/)
 - #### [BeeCrowd](https://www.beecrowd.com/)
-- #### [UVA](https://onlinejudge.org/)
 - #### [LeetCode](https://leetcode.com/)
 - #### [CodeForces](https://codeforces.com/)
 

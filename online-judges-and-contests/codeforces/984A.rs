@@ -18,7 +18,7 @@ fn main() {
 
         let mut game_vec: Vec<i32> = game.into_sorted_vec();
 
-        // Fórmula do Termo Central
+        // termo central
         if n % 2 == 0 {
             println!("{}", game_vec[(n / 2) - 1]);
         } else {
